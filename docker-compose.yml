@@ -1,0 +1,10 @@
+services:
+  facade:
+    build:
+      context: .
+      dockerfile: facade/Dockerfile
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./facade:/app/facade
+      - ./shared:/app/shared
