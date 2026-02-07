@@ -1,10 +1,20 @@
 services:
   facade:
+    image: hws-app:latest
     build:
       context: .
-      dockerfile: facade/Dockerfile
+      dockerfile: Dockerfile
+    command: ["uvicorn", "facade.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8080:8000"
-    volumes:
-      - ./facade:/app/facade
-      - ./shared:/app/shared
+    depends_on:
+      - logging_service
+      - counter_service
+
+  logging_service:
+    image: hws-app:latest
+    command: ["uvicorn", "logging_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  counter_service:
+    image: hws-app:latest
+    command: ["uvicorn", "counter_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
