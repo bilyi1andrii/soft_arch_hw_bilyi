@@ -4,6 +4,7 @@ app = FastAPI()
 
 users_balance = {}
 
+
 @app.post("/count")
 async def count_user_balance(transaction: dict):
 
@@ -14,9 +15,11 @@ async def count_user_balance(transaction: dict):
 
     return {"balance": users_balance[user_id]}
 
+
 @app.get("/balance/{user_id}")
 async def get_user_balance(user_id: str):
     return {"balance": users_balance.get(user_id, 0)}
+
 
 @app.get("/balance")
 async def get_all_user_balance():

@@ -3,12 +3,14 @@ from fastapi import FastAPI
 app = FastAPI()
 user_logs = {}
 
+
 @app.post("/log")
 def log_user(transaction: dict):
 
     user_logs[transaction["transaction_id"]] = transaction
 
     return {"status": "success!"}
+
 
 @app.get("/transaction/{user_id}")
 async def get_user_transactions(user_id: str):
