@@ -4,7 +4,7 @@ app = FastAPI()
 user_logs = {}
 
 
-@app.post("/log")
+@app.post("/transaction")
 def log_user(transaction: dict):
 
     user_logs[transaction["transaction_id"]] = transaction

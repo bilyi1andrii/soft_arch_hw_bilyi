@@ -11,20 +11,18 @@ COUNTER_SERVICE_URL = "http://counter_service:8000"
 
 METRICS = {"logging_time": 0.0, "counter_time": 0.0}
 
+http_client = httpx.AsyncClient()
+
 
 async def do_logging(payload: dict):
     start_time = time.perf_counter()
-    async with httpx.AsyncClient() as client:
-        await client.post(f"{LOGGING_SERVICE_URL}/log", json=payload)
-
+    await http_client.post(f"{LOGGING_SERVICE_URL}/transaction", json=payload)
     METRICS["logging_time"] += time.perf_counter() - start_time
 
 
 async def do_counting(payload: dict):
     start_time = time.perf_counter()
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{COUNTER_SERVICE_URL}/count", json=payload)
-
+    resp = await http_client.post(f"{COUNTER_SERVICE_URL}/transaction", json=payload)
     METRICS["counter_time"] += time.perf_counter() - start_time
     return resp.json().get("balance", 0)
 
@@ -45,31 +43,27 @@ async def process_request(transaction: Transaction):
     return {"transaction_id": timestamp_id, "balance": balance}
 
 
-@app.get("/")
-async def hello():
-    return {"msg": "bye"}
+@app.get("/health")
+async def get_system_status():
+    return {"status": "ok"}
 
 
 @app.get("/user/{user_id}")
 async def get_user_data(user_id: str):
 
-    async with httpx.AsyncClient() as client:
-        log_resp = await client.get(f"{LOGGING_SERVICE_URL}/transaction/{user_id}")
-        transactions = log_resp.json().get("transactions", [])
+    log_resp = await http_client.get(f"{LOGGING_SERVICE_URL}/transaction/{user_id}")
+    transactions = log_resp.json().get("transactions", [])
 
-        count_resp = await client.get(f"{COUNTER_SERVICE_URL}/balance/{user_id}")
-        balance = count_resp.json().get("balance", 0)
+    count_resp = await http_client.get(f"{COUNTER_SERVICE_URL}/balance/{user_id}")
+    balance = count_resp.json().get("balance", 0)
 
     return {"balance": balance, "transactions": transactions}
 
 
 @app.get("/accounts")
 async def get_all_account_balances():
-
-    async with httpx.AsyncClient() as client:
-        count_resp = await client.get(f"{COUNTER_SERVICE_URL}/balance")
-        balances = count_resp.json().get("balances", {})
-
+    count_resp = await http_client.get(f"{COUNTER_SERVICE_URL}/balance")
+    balances = count_resp.json().get("balances", {})
     return balances
 
 

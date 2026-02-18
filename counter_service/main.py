@@ -5,7 +5,7 @@ app = FastAPI()
 users_balance = {}
 
 
-@app.post("/count")
+@app.post("/transaction")
 async def count_user_balance(transaction: dict):
 
     user_id = transaction["user_id"]
