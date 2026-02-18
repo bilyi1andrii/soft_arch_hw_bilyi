@@ -7,7 +7,12 @@ user_logs = {}
 @app.post("/transaction")
 def log_user(transaction: dict):
 
-    user_logs[transaction["transaction_id"]] = transaction
+    transaction_id = transaction["transaction_id"]
+    user_id = transaction["user_id"]
+
+    user_logs[transaction_id] = transaction
+
+    print(f"[LOGGING] Stored transaction {transaction_id} for user '{user_id}'", flush=True)
 
     return {"status": "success!"}
 

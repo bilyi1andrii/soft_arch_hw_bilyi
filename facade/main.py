@@ -36,9 +36,13 @@ async def process_request(transaction: Transaction):
 
     payload["transaction_id"] = timestamp_id
 
+    print(f"[FACADE] Received request from user '{transaction.user_id}' for amount {transaction.amount}", flush=True)
+
     results = await asyncio.gather(do_logging(payload), do_counting(payload))
 
     balance = results[1]
+
+    print(f"[FACADE] Completed transaction {timestamp_id}. Final balance: {balance}", flush=True)
 
     return {"transaction_id": timestamp_id, "balance": balance}
 
