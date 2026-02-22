@@ -15,6 +15,9 @@
 docker compose up -d --build
 ```
 
+## Protocol
+Saved as hw1_protocol.pdf
+
 ## Testing
 You can use, for example, `Thunderbolt client` or `/docs` path.
 
