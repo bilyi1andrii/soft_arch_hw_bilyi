@@ -11,6 +11,7 @@
 - `POST /metrics/reset` - Resets the metrics, setting them to 0
 
 ## Build & Run
+The following command will create three containers and exposes facade service on port 8080.
 ```{shell}
 docker compose up -d --build
 ```
