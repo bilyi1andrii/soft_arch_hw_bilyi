@@ -1,10 +1,39 @@
 services:
   facade:
-    build:
-      context: .
-      dockerfile: facade/Dockerfile
+    image: hws-app:latest
+    build: .
+    command:
+      ["uv", "run", "fastapi", "dev", "facade/main.py", "--host", "0.0.0.0"]
     ports:
       - "8080:8000"
-    volumes:
-      - ./facade:/app/facade
-      - ./shared:/app/shared
+    depends_on:
+      - logging_service
+      - counter_service
+
+  logging_service:
+    image: hws-app:latest
+    build: .
+    command:
+      [
+        "uv",
+        "run",
+        "fastapi",
+        "dev",
+        "logging_service/main.py",
+        "--host",
+        "0.0.0.0",
+      ]
+
+  counter_service:
+    image: hws-app:latest
+    build: .
+    command:
+      [
+        "uv",
+        "run",
+        "fastapi",
+        "dev",
+        "counter_service/main.py",
+        "--host",
+        "0.0.0.0",
+      ]
