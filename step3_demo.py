@@ -1,11 +1,10 @@
 from hazelcast.client import HazelcastClient
-import asyncio
+import time
 
-
-async def main():
+def main():
     client = HazelcastClient(
         cluster_name="dev-cluster",
-        cluster_members=["hazelcast1:5701", "hazelcast2:5701", "hazelcast3:5701"],
+        cluster_members=["hazelcast1:5701", "hazelcast2:5701", "hazelcast3:5701"]
     )
 
     print("Connected to Hazelcast cluster.")
@@ -17,9 +16,8 @@ async def main():
 
     print("Finished writing data. Check the Management Center!")
 
-    await asyncio.sleep(2)
+    time.sleep(2)
     client.shutdown()
 
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

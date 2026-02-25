@@ -26,22 +26,31 @@ services:
     image: hazelcast/hazelcast:5.3
     ports:
       - "5701:5701"
+    volumes:
+      - ./hazelcast.yaml:/opt/hazelcast/config/hazelcast.yaml
     environment:
       - HZ_CLUSTERNAME=dev-cluster
+      - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
 
   hazelcast2:
     image: hazelcast/hazelcast:5.3
     ports:
       - "5702:5701"
+    volumes:
+      - ./hazelcast.yaml:/opt/hazelcast/config/hazelcast.yaml
     environment:
       - HZ_CLUSTERNAME=dev-cluster
+      - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
 
   hazelcast3:
     image: hazelcast/hazelcast:5.3
     ports:
       - "5703:5701"
+    volumes:
+      - ./hazelcast.yaml:/opt/hazelcast/config/hazelcast.yaml
     environment:
       - HZ_CLUSTERNAME=dev-cluster
+      - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
 
   management-center:
     image: hazelcast/management-center:5.3
