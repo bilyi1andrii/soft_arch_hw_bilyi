@@ -1,30 +1,69 @@
-# SA - HW 1: Basic Microservices Architecture
+# SA - HW 2: Intro to Hazelcast: Distributed Map
 
 ## Implementation
-- Python + FastAPI
-
-## Endpoints
-- `POST /process` - Process the transaction (requires `user_id` and `amount`)
-- `GET /user/{user_id}` - Retrieve balance and transaction history of a specific user
-- `GET /accounts` - Retrieve the balances of all users
-- `GET /metrics` - Get the latency for the logging and counter services
-- `POST /metrics/reset` - Resets the metrics, setting them to 0
+- Docker + Python Client
 
 ## Build & Run
-The following command will create three containers and exposes facade service on port 8080.
+This command will deploy 3 nodes of hazelcast and management service. Additionally, it runs 3 services from the previous task.
 ```{shell}
 docker compose up -d --build
 ```
 
 ## Protocol
-Saved as hw1_protocol.pdf
+Saved as sa_hw2_protocol_bilyi.pdf
 
 ## Testing
-You can use, for example, `Thunderbolt client` or `/docs` path.
+After deploying the containers. You can run the following scripts for the corresponding step.
 
-To run the script, make sure to have the necessary dependencies (via uv or pip).
-
-Example usage:
+**Step 3**
+```{shell}
+docker-compose exec facade uv run python step3_demo.py
 ```
-uv run --with httpx perf_test.py
+
+Possible output:
+```
+Connected to Hazelcast cluster.
+Writing 1000 values...
+Finished writing data. Check the Management Center!
+```
+
+
+**Step 4-7**
+```{shell}
+docker-compose exec facade uv run python step456_locks.py
+```
+
+Possible output:
+```
+Starting NO LOCKS test
+Final value: 15764
+Time: 5.13s
+
+Starting PESSIMISTIC LOCKING test
+Final value: 30000
+Time: 18.43s
+
+Starting OPTIMISTIC LOCKING test
+Final value: 30000
+Time: 11.71s
+```
+
+**Step 8**
+```{shell}
+docker-compose exec facade uv run python step8_queue.py
+```
+
+Possible output:
+```
+[Producer] Starting...
+[Reader 1] Ready for reading
+[Reader 2] Ready for reading
+  -> [Reader 1] Read: 1
+[Producer] Wrote: 1
+  -> [Reader 2] Read: 2
+[Producer] Wrote: 2
+  -> [Reader 1] Read: 3
+[Producer] Wrote: 3
+  -> [Reader 2] Read: 4
+...
 ```
