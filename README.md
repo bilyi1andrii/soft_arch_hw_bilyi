@@ -4,7 +4,7 @@
 - Docker + Python Client
 
 ## Build & Run
-This command will deploy 3 nodes of hazelcast and management service. Additionally, it runs 3 services from the previous task.
+This command will deploy 3 nodes of hazelcast and management service (available on localhost:8081). Additionally, it runs 3 services from the previous task.
 ```{shell}
 docker compose up -d --build
 ```
@@ -13,11 +13,11 @@ docker compose up -d --build
 Saved as sa_hw2_protocol_bilyi.pdf
 
 ## Testing
-After deploying the containers. You can run the following scripts for the corresponding step.
+After deploying the containers. You can run the following scripts for the corresponding step. All scripts are executed inside the `facade` for consistency.
 
-**Step 3**
+**Step 3: Distributed Map**
 ```{shell}
-docker-compose exec facade uv run python step3_demo.py
+docker compose exec facade uv run python step3_demo.py
 ```
 
 Possible output:
@@ -28,9 +28,9 @@ Finished writing data. Check the Management Center!
 ```
 
 
-**Step 4-7**
+**Step 4-7: Locking Mechanisms**
 ```{shell}
-docker-compose exec facade uv run python step456_locks.py
+docker compose exec facade uv run python step456_locks.py
 ```
 
 Possible output:
@@ -48,9 +48,9 @@ Final value: 30000
 Time: 11.71s
 ```
 
-**Step 8**
+**Step 8: Bounded Queue**
 ```{shell}
-docker-compose exec facade uv run python step8_queue.py
+docker compose exec facade uv run python step8_queue.py
 ```
 
 Possible output:
