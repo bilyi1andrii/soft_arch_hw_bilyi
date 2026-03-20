@@ -52,7 +52,7 @@ def log_user(request: Request, transaction: dict):
 
 
 @app.get("/transaction/{user_id}")
-async def get_user_transactions(request: Request, user_id: str):
+def get_user_transactions(request: Request, user_id: str):
     distributed_map = request.app.state.distributed_map
 
     all_logs = distributed_map.values()

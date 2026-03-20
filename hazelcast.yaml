@@ -8,6 +8,13 @@ hazelcast:
           - hazelcast1
           - hazelcast2
           - hazelcast3
+
+    rest-api:
+      enabled: true
+      endpoint-groups:
+        HEALTH_CHECK:
+          enabled: true
+
   map:
     messages_map:
       backup-count: 2

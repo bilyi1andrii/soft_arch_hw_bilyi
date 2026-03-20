@@ -85,8 +85,6 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
-      - HZ_NETWORK_RESTAPI_ENABLED=true
-      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
     healthcheck:
       test:
         [
@@ -108,8 +106,6 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
-      - HZ_NETWORK_RESTAPI_ENABLED=true
-      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
     healthcheck:
       test:
         [
@@ -131,8 +127,6 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
-      - HZ_NETWORK_RESTAPI_ENABLED=true
-      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
     healthcheck:
       test:
         [
