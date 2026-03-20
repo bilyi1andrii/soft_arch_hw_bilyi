@@ -18,7 +18,12 @@ services:
       context: .
       dockerfile: logging_service/Dockerfile
     depends_on:
-      - hazelcast1
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
 
   logging2:
     image: logging-service:latest
@@ -26,7 +31,12 @@ services:
       context: .
       dockerfile: logging_service/Dockerfile
     depends_on:
-      - hazelcast1
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
 
   logging3:
     image: logging-service:latest
@@ -34,7 +44,12 @@ services:
       context: .
       dockerfile: logging_service/Dockerfile
     depends_on:
-      - hazelcast1
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
 
   counter_service:
     image: counter-service:latest
@@ -70,6 +85,19 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+      - HZ_NETWORK_RESTAPI_ENABLED=true
+      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   hazelcast2:
     image: hazelcast/hazelcast:5.3
@@ -80,6 +108,19 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+      - HZ_NETWORK_RESTAPI_ENABLED=true
+      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   hazelcast3:
     image: hazelcast/hazelcast:5.3
@@ -90,6 +131,19 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+      - HZ_NETWORK_RESTAPI_ENABLED=true
+      - HZ_NETWORK_RESTAPI_ENDPOINTGROUPS_HEALTHCHECK_ENABLED=true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   management-center:
     image: hazelcast/management-center:5.3
@@ -98,3 +152,4 @@ services:
     environment:
       - MC_DEFAULT_CLUSTER=dev-cluster
       - MC_DEFAULT_CLUSTER_MEMBERS=hazelcast1,hazelcast2,hazelcast3
+
