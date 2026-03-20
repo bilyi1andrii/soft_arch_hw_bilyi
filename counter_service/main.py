@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS balances (
                 user_id TEXT PRIMARY KEY,
-                balance INTEGER NOT NULL DEFAULT 0
+                balance NUMERIC(15, 2) NOT NULL DEFAULT 0.0
             )
         """)
     print("[COUNTER] Successfully connected to PostgreSQL!")
@@ -24,7 +24,20 @@ async def lifespan(app: FastAPI):
 
     await app.state.pool.close()
 
+
 app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/health")
+async def health_check(request: Request):
+    try:
+        db_pool = request.app.state.pool
+        async with db_pool.acquire() as conn:
+            await conn.execute("SELECT 1")
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        return {"status": "error", "database": str(e)}
+
 
 @app.post("/transaction")
 async def count_user_balance(request: Request, transaction: dict):
