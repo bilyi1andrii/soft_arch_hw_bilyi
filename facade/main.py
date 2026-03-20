@@ -1,12 +1,18 @@
 import httpx
 import time
 import asyncio
+import random
 from fastapi import FastAPI
 from shared.classes import Transaction
 
 app = FastAPI()
 
-LOGGING_SERVICE_URL = "http://logging_service:8000"
+LOGGING_INSTANCES = [
+    "http://logging1:8000",
+    "http://logging2:8000",
+    "http://logging3:8000",
+]
+
 COUNTER_SERVICE_URL = "http://counter_service:8000"
 
 METRICS = {"logging_time": 0.0, "counter_time": 0.0}
@@ -16,7 +22,24 @@ http_client = httpx.AsyncClient()
 
 async def do_logging(payload: dict):
     start_time = time.perf_counter()
-    await http_client.post(f"{LOGGING_SERVICE_URL}/transaction", json=payload)
+    instances = list(LOGGING_INSTANCES)
+    random.shuffle(instances)
+
+    success = False
+    for url in instances:
+        try:
+            await http_client.post(f"{url}/transaction", json=payload)
+            success = True
+            break
+        except httpx.RequestError:
+            print(
+                f"[FACADE] Failed to connect to {url}, falling back to next instance...",
+                flush=True,
+            )
+            continue
+    if not success:
+        print("[FACADE] Critical: All logging instances are down!")
+
     METRICS["logging_time"] += time.perf_counter() - start_time
 
 
@@ -36,13 +59,19 @@ async def process_request(transaction: Transaction):
 
     payload["transaction_id"] = timestamp_id
 
-    print(f"[FACADE] Received request from user '{transaction.user_id}' for amount {transaction.amount}", flush=True)
+    print(
+        f"[FACADE] Received request from user '{transaction.user_id}' for amount {transaction.amount}",
+        flush=True,
+    )
 
     results = await asyncio.gather(do_logging(payload), do_counting(payload))
 
     balance = results[1]
 
-    print(f"[FACADE] Completed transaction {timestamp_id}. Final balance: {balance}", flush=True)
+    print(
+        f"[FACADE] Completed transaction {timestamp_id}. Final balance: {balance}",
+        flush=True,
+    )
 
     return {"transaction_id": timestamp_id, "balance": balance}
 
@@ -54,9 +83,17 @@ async def get_system_status():
 
 @app.get("/user/{user_id}")
 async def get_user_data(user_id: str):
+    instances = list(LOGGING_INSTANCES)
+    random.shuffle(instances)
 
-    log_resp = await http_client.get(f"{LOGGING_SERVICE_URL}/transaction/{user_id}")
-    transactions = log_resp.json().get("transactions", [])
+    transactions = []
+    for url in instances:
+        try:
+            log_resp = await http_client.get(f"{url}/transaction/{user_id}")
+            transactions = log_resp.json().get("transactions", [])
+            break
+        except httpx.RequestError:
+            continue
 
     count_resp = await http_client.get(f"{COUNTER_SERVICE_URL}/balance/{user_id}")
     balance = count_resp.json().get("balance", 0)
