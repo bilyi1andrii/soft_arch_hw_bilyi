@@ -1,0 +1,17 @@
+hazelcast:
+  cluster-name: dev-cluster
+  network:
+    join:
+      tcp-ip:
+        enabled: true
+        member-list:
+          - hazelcast1
+          - hazelcast2
+          - hazelcast3
+  map:
+    step3_demo_map:
+      backup-count: 2
+      async-backup-count: 0
+  queue:
+    bounded_queue:
+      max-size: 10

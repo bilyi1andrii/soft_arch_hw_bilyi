@@ -3,11 +3,13 @@ COPY --from=docker.io/astral/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY ./pyproject.toml ./uv.lock ./
 
+COPY ./pyproject.toml ./uv.lock ./
 RUN uv sync
 
+
 COPY ./shared /app/shared
-COPY ./facade /app/facade
 COPY ./counter_service /app/counter_service
-COPY ./logging_service /app/logging_service
+
+
+CMD ["uv", "run", "fastapi", "run", "counter_service/main.py", "--host", "0.0.0.0", "--port", "8000"]
