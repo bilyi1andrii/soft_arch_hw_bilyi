@@ -1,69 +1,30 @@
-# SA - HW 2: Intro to Hazelcast: Distributed Map
+# SA - HW 3: Microservices with Hazelcast
 
 ## Implementation
-- Docker + Python Client
+- FastAPI + Hazelcast + PostgreSQL
+
+## Endpoints
+- `POST /process` - Process the transaction (requires `user_id` and `amount`)
+- `GET /user/{user_id}` - Retrieve balance and transaction history of a specific user
+- `GET /accounts` - Retrieve the balances of all users
+- `GET /metrics` - Get the latency for the logging and counter services
+- `POST /metrics/reset` - Resets the metrics, setting them to 0
 
 ## Build & Run
-This command will deploy 3 nodes of hazelcast and management service (available on localhost:8081). Additionally, it runs 3 services from the previous task.
+This command will deploy facade (port 8080), counter, and 3 instances of logging services. Also 3 nodes of hazelcast, 1 management service (port 8081) and 1 postgres.
 ```{shell}
 docker compose up -d --build
 ```
 
 ## Protocol
-Saved as sa_hw2_protocol_bilyi.pdf
+Saved as sa_hw3_bilyi.pdf
 
 ## Testing
-After deploying the containers. You can run the following scripts for the corresponding step. All scripts are executed inside the `facade` for consistency.
+You can use, for example, `Thunderbolt client` or `/docs` path.
 
-**Step 3: Distributed Map**
-```{shell}
-docker compose exec facade uv run python step3_demo.py
+To run the script, make sure to have the necessary dependencies (via uv or pip).
+
+Example usage:
 ```
-
-Possible output:
-```
-Connected to Hazelcast cluster.
-Writing 1000 values...
-Finished writing data. Check the Management Center!
-```
-
-
-**Step 4-7: Locking Mechanisms**
-```{shell}
-docker compose exec facade uv run python step456_locks.py
-```
-
-Possible output:
-```
-Starting NO LOCKS test
-Final value: 15764
-Time: 5.13s
-
-Starting PESSIMISTIC LOCKING test
-Final value: 30000
-Time: 18.43s
-
-Starting OPTIMISTIC LOCKING test
-Final value: 30000
-Time: 11.71s
-```
-
-**Step 8: Bounded Queue**
-```{shell}
-docker compose exec facade uv run python step8_queue.py
-```
-
-Possible output:
-```
-[Producer] Starting...
-[Reader 1] Ready for reading
-[Reader 2] Ready for reading
-  -> [Reader 1] Read: 1
-[Producer] Wrote: 1
-  -> [Reader 2] Read: 2
-[Producer] Wrote: 2
-  -> [Reader 1] Read: 3
-[Producer] Wrote: 3
-  -> [Reader 2] Read: 4
-...
+uv run --with httpx perf_test.py
 ```
