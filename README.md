@@ -17,7 +17,7 @@ docker compose up -d --build
 ```
 
 ## Protocol
-Saved as sa_hw3_bilyi.pdf
+Here is the [Report](sa_hw3_bilyi.pdf)
 
 ## Testing
 You can use, for example, `Thunderbolt client` or `/docs` path.
