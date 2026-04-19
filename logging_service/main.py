@@ -1,6 +1,11 @@
+import httpx
+import os
 from hazelcast.client import HazelcastClient
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
+
+MY_URL = os.getenv("MY_URL", "http://logging:8000")
+CONFIG_SERVER_URL = os.getenv("CONFIG_SERVER_URL", "http://config_server:8000")
 
 
 @asynccontextmanager
@@ -13,6 +18,19 @@ async def lifespan(app: FastAPI):
     app.state.distributed_map = client.get_map("messages_map").blocking()
 
     print("[LOGGING] Connected to Hazelcast cluster!", flush=True)
+
+    async with httpx.AsyncClient() as http_client:
+        try:
+            await http_client.post(
+                f"{CONFIG_SERVER_URL}/register",
+                json={"name": "logging-service", "url": MY_URL},
+            )
+            print(
+                f"[LOGGING] Successfully registered {MY_URL} to config-server",
+                flush=True,
+            )
+        except Exception as e:
+            print(f"[LOGGING] Failed to register with config server: {e}", flush=True)
 
     yield
 
