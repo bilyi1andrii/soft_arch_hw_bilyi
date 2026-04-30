@@ -7,20 +7,74 @@ services:
     ports:
       - "8080:8000"
     depends_on:
-      - logging_service
+      - logging1
+      - logging2
+      - logging3
       - counter_service
 
-  logging_service:
+  logging1:
     image: logging-service:latest
     build:
       context: .
       dockerfile: logging_service/Dockerfile
+    depends_on:
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
+
+  logging2:
+    image: logging-service:latest
+    build:
+      context: .
+      dockerfile: logging_service/Dockerfile
+    depends_on:
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
+
+  logging3:
+    image: logging-service:latest
+    build:
+      context: .
+      dockerfile: logging_service/Dockerfile
+    depends_on:
+      hazelcast1:
+        condition: service_healthy
+      hazelcast2:
+        condition: service_healthy
+      hazelcast3:
+        condition: service_healthy
 
   counter_service:
     image: counter-service:latest
     build:
       context: .
       dockerfile: counter_service/Dockerfile
+    environment:
+      - DB_URL=postgresql://user:password@postgres_db:5432/counter_db
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  postgres_db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: counter_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d counter_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   hazelcast1:
     image: hazelcast/hazelcast:5.3
@@ -31,6 +85,17 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   hazelcast2:
     image: hazelcast/hazelcast:5.3
@@ -41,6 +106,17 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   hazelcast3:
     image: hazelcast/hazelcast:5.3
@@ -51,6 +127,17 @@ services:
     environment:
       - HZ_CLUSTERNAME=dev-cluster
       - JAVA_OPTS=-Dhazelcast.config=/opt/hazelcast/config/hazelcast.yaml
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://127.0.0.1:5701/hazelcast/health/node-state",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   management-center:
     image: hazelcast/management-center:5.3
@@ -59,3 +146,4 @@ services:
     environment:
       - MC_DEFAULT_CLUSTER=dev-cluster
       - MC_DEFAULT_CLUSTER_MEMBERS=hazelcast1,hazelcast2,hazelcast3
+

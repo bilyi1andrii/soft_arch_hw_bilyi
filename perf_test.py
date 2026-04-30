@@ -1,6 +1,7 @@
 import asyncio
 import time
 import httpx
+import math
 
 
 FACADE_URL = "http://localhost:8080"
@@ -8,7 +9,7 @@ NUM_CLIENTS = 10
 REQUESTS_PER_CLIENT = 10000
 
 
-async def client_worker(client: httpx.AsyncClient, user_id: str, amount: int):
+async def client_worker(client: httpx.AsyncClient, user_id: str, amount: float):
     for _ in range(REQUESTS_PER_CLIENT):
         payload = {"user_id": user_id, "amount": amount}
         await client.post(f"{FACADE_URL}/process", json=payload)
@@ -22,7 +23,7 @@ async def run_experiment(same_account: bool):
         tasks = []
         for i in range(NUM_CLIENTS):
             user_id = "shared" if same_account else f"user_{i}"
-            tasks.append(client_worker(client, user_id, 1))
+            tasks.append(client_worker(client, user_id, 1.0))
         start_time = time.perf_counter()
         await asyncio.gather(*tasks)
 
@@ -50,16 +51,16 @@ async def run_experiment(same_account: bool):
         balances = accounts_resp.json()
 
         if same_account:
-            actual_balance = balances.get("shared", 0)
-            print(f"Shared Account Balance: {actual_balance} (Expected: 100000)")
-            if actual_balance != 100000:
+            actual_balance = balances.get("shared", 0.0)
+            print(f"Shared Account Balance: {actual_balance} (Expected: 100000.0)")
+            if not math.isclose(actual_balance, 100000.0, rel_tol=1e-5):
                 print("WARNING: Race condition detected! Data was lost.")
         else:
             for i in range(NUM_CLIENTS):
                 uid = f"user_{i}"
-                actual_balance = balances.get(uid, 0)
-                print(f"{uid} Balance: {actual_balance} (Expected: 10000)")
-                if actual_balance != 10000:
+                actual_balance = balances.get(uid, 0.0)
+                print(f"{uid} Balance: {actual_balance} (Expected: 10000.0)")
+                if not math.isclose(actual_balance, 10000.0, rel_tol=1e-5):
                     print(f"WARNING: Race condition detected for {uid}!")
 
 
