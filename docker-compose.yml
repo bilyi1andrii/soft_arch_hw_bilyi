@@ -1,14 +1,28 @@
 services:
-  config_server:
-    image: config-server:latest
-    build:
-      context: .
-      dockerfile: config_server/Dockerfile
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: consul
     ports:
-      - "8000:8000"
+      - "8500:8500"
+    command: "agent -dev -client=0.0.0.0"
+
+  consul-init:
+    image: hashicorp/consul:1.15
+    container_name: consul-init
+    depends_on:
+      - consul
+    environment:
+      - CONSUL_HTTP_ADDR=http://consul:8500
+    command: >
+      sh -c "
+      sleep 2 &&
+      consul kv put hazelcast/config '{\"cluster_name\":\"dev-cluster\",\"members\":[\"hazelcast1:5701\",\"hazelcast2:5701\",\"hazelcast3:5701\"]}' &&
+      consul kv put kafka/config '{\"brokers\":\"kafka:9092\",\"topic\":\"transactions\"}'
+      "
 
   kafka:
     image: apache/kafka:latest
+    container_name: kafka
     ports:
       - "9092:9092"
     environment:
@@ -36,82 +50,97 @@ services:
       retries: 5
   facade:
     image: facade-service:latest
+    container_name: facade
     build:
       context: .
       dockerfile: facade/Dockerfile
     ports:
       - "8080:8000"
     environment:
-      - KAFKA_BROKERS=kafka:9092
-      - CONFIG_SERVER_URL=http://config_server:8000
+      - SERVICE_ID=facade1
+      - SERVICE_HOST=facade
+      - SERVICE_PORT=8000
+      - CONSUL_URL=http://consul:8500
     depends_on:
       kafka:
         condition: service_healthy
-      config_server:
-        condition: service_started
+      consul-init:
+        condition: service_completed_successfully
 
   logging1:
     image: logging-service:latest
+    container_name: logging1
     build:
       context: .
       dockerfile: logging_service/Dockerfile
     environment:
-      - MY_URL=http://logging1:8000
-      - CONFIG_SERVER_URL=http://config_server:8000
+      - SERVICE_ID=logging1
+      - SERVICE_HOST=logging1
+      - SERVICE_PORT=8000
+      - CONSUL_URL=http://consul:8500
     depends_on:
       hazelcast1:
         condition: service_healthy
-      config_server:
-        condition: service_started
+      consul-init:
+        condition: service_completed_successfully
 
   logging2:
     image: logging-service:latest
+    container_name: logging2
     build:
       context: .
       dockerfile: logging_service/Dockerfile
     environment:
-      - MY_URL=http://logging2:8000
-      - CONFIG_SERVER_URL=http://config_server:8000
+      - SERVICE_ID=logging2
+      - SERVICE_HOST=logging2
+      - SERVICE_PORT=8000
+      - CONSUL_URL=http://consul:8500
     depends_on:
       hazelcast1:
         condition: service_healthy
-      config_server:
-        condition: service_started
+      consul-init:
+        condition: service_completed_successfully
 
   logging3:
     image: logging-service:latest
+    container_name: logging3
     build:
       context: .
       dockerfile: logging_service/Dockerfile
     environment:
-      - MY_URL=http://logging3:8000
-      - CONFIG_SERVER_URL=http://config_server:8000
+      - SERVICE_ID=logging3
+      - SERVICE_HOST=logging3
+      - SERVICE_PORT=8000
+      - CONSUL_URL=http://consul:8500
     depends_on:
       hazelcast1:
         condition: service_healthy
-      config_server:
-        condition: service_started
+      consul-init:
+        condition: service_completed_successfully
 
   counter_service:
     image: counter-service:latest
+    container_name: counter_service
     build:
       context: .
       dockerfile: counter_service/Dockerfile
     environment:
       - DB_URL=postgresql://user:password@postgres_db:5432/counter_db
-      - MY_URL=http://counter_service:8000
-      - KAFKA_BROKERS=kafka:9092
-      - CONFIG_SERVER_URL=http://config_server:8000
+      - SERVICE_ID=counter1
+      - SERVICE_HOST=counter_service
+      - SERVICE_PORT=8000
+      - CONSUL_URL=http://consul:8500
     depends_on:
       postgres_db:
         condition: service_healthy
-      config_server:
-        condition: service_started
       kafka:
         condition: service_healthy
+      consul-init:
+        condition: service_completed_successfully
 
   postgres_db:
     image: postgres:15-alpine
+    container_name: postgres_db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -126,6 +155,7 @@ services:
 
   hazelcast1:
     image: hazelcast/hazelcast:5.3
+    container_name: hazelcast1
     ports:
       - "5701:5701"
     volumes:
@@ -141,6 +171,7 @@ services:
 
   hazelcast2:
     image: hazelcast/hazelcast:5.3
+    container_name: hazelcast2
     ports:
       - "5702:5701"
     volumes:
@@ -156,6 +187,7 @@ services:
 
   hazelcast3:
     image: hazelcast/hazelcast:5.3
+    container_name: hazelcast3
     ports:
       - "5703:5701"
     volumes:
@@ -171,6 +203,7 @@ services:
 
   management-center:
     image: hazelcast/management-center:5.3
+    container_name: management-center
     ports:
       - "8081:8080"
     environment:
