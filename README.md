@@ -1,11 +1,11 @@
-# SA - HW 4: Microservices with Messaging Queue
+# SA - HW 5: Microservices with Service Discovery & Config Server (Consul)
 
 ## Implementation
-- FastAPI + Hazelcast + PostgreSQL + Kafka + Config Server
+- FastAPI + Hazelcast + PostgreSQL + Kafka + Consul
 
 ## Architecture Updates
-- **Service Discovery** Added a `config_server` where logging and counter services dynamically register their IPs on startup. While facade service queries this registry to locate their URLs.
-- **Message Queue** Replaced synchronouns HTTP calls to the counter service with an asynchronous producer/consumer using **Apache Kafka**
+- **Service Discovery & Registry:** Integrated **Consul**. All microservices (Facade, Logging, Counter) dynamically register themselves upon startup. The Facade service queries Consul's health endpoints to discover healthy instances of the Logging and Counter services.
+- **Centralized Configuration:** Consul acts as a Key/Value Config Server. The Logging service dynamically fetches Hazelcast cluster configurations, while the Facade and Counter services fetch Kafka broker and topic configurations from Consul on startup.
 
 
 ## Endpoints
@@ -23,7 +23,7 @@ docker compose up -d --build
 ```
 
 ## Protocol
-Here is the [Report](sa_hw4_bilyi.pdf)
+Here is the [Report](sa_hw5_bilyi.pdf)
 
 ## Testing
 You can use, for example, `Thunderbolt client` or `/docs` path.
