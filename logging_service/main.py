@@ -4,33 +4,52 @@ from hazelcast.client import HazelcastClient
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 
-MY_URL = os.getenv("MY_URL", "http://logging:8000")
-CONFIG_SERVER_URL = os.getenv("CONFIG_SERVER_URL", "http://config_server:8000")
+SERVICE_ID = os.getenv("SERVICE_ID", "logging1")
+SERVICE_HOST = os.getenv("SERVICE_HOST", "127.0.0.1")
+SERVICE_PORT = int(os.getenv("SERVICE_PORT", "8000"))
+CONSUL_URL = os.getenv("CONSUL_URL", "http://consul:8500")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    client = HazelcastClient(
-        cluster_name="dev-cluster",
-        cluster_members=["hazelcast1:5701", "hazelcast2:5701", "hazelcast3:5701"],
-    )
-    app.state.hz_client = client
-    app.state.distributed_map = client.get_map("messages_map").blocking()
-
-    print("[LOGGING] Connected to Hazelcast cluster!", flush=True)
-
     async with httpx.AsyncClient() as http_client:
         try:
-            await http_client.post(
-                f"{CONFIG_SERVER_URL}/register",
-                json={"name": "logging-service", "url": MY_URL},
+            kv_resp = await http_client.get(
+                f"{CONSUL_URL}/v1/kv/hazelcast/config?raw=true"
             )
-            print(
-                f"[LOGGING] Successfully registered {MY_URL} to config-server",
-                flush=True,
-            )
+            hz_config = kv_resp.json()
+            print(f"[LOGGING] Fetched Hazelcast Config: {hz_config}", flush=True)
         except Exception as e:
-            print(f"[LOGGING] Failed to register with config server: {e}", flush=True)
+            print(f"[LOGGING] Failed to fetch Hazelcast config: {e}", flush=True)
+            hz_config = {"cluster_name": "dev-cluster", "members": ["hazelcast1:5701"]}
+
+        client = HazelcastClient(
+            cluster_name=hz_config["cluster_name"],
+            cluster_members=hz_config["members"],
+        )
+        app.state.hz_client = client
+        app.state.distributed_map = client.get_map("messages_map").blocking()
+        print("[LOGGING] Connected to Hazelcast cluster!", flush=True)
+
+        registration_payload = {
+            "ID": SERVICE_ID,
+            "Name": "logging-service",
+            "Address": SERVICE_HOST,
+            "Port": SERVICE_PORT,
+            "Check": {
+                "HTTP": f"http://{SERVICE_HOST}:{SERVICE_PORT}/health",
+                "Interval": "10s",
+                "Timeout": "5s",
+                "DeregisterCriticalServiceAfter": "1m",
+            },
+        }
+        try:
+            await http_client.put(
+                f"{CONSUL_URL}/v1/agent/service/register", json=registration_payload
+            )
+            print(f"[LOGGING] Registered {SERVICE_ID} with Consul", flush=True)
+        except Exception as e:
+            print(f"[LOGGING] Consul registration failed: {e}", flush=True)
 
     yield
 
